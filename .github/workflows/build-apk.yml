@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Java
@@ -25,27 +25,29 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
 
-      - name: Install Android SDK packages
+      - name: Check Android SDK
         run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_HOME/platforms"
 
-      - name: Extract ZIP project
+      - name: Extract ZIP
         run: |
           mkdir -p source
           unzip -q VANTA_CODE.zip -d source
 
-      - name: Find Android project
+      - name: Find Project
         run: |
           PROJECT_FILE=$(find source -name settings.gradle.kts -print -quit)
           if [ -z "$PROJECT_FILE" ]; then
             PROJECT_FILE=$(find source -name settings.gradle -print -quit)
           fi
           if [ -z "$PROJECT_FILE" ]; then
-            echo "Android Gradle project not found in ZIP"
+            echo "Gradle Android project not found"
             exit 1
           fi
           echo "PROJECT_DIR=$(dirname "$PROJECT_FILE")" >> "$GITHUB_ENV"
