@@ -1,67 +1,48 @@
 
-      - 
-name: VANTA CODE APK Builder
+name: VANTA APK Builder
 
-"on":
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+on: [push, workflow_dispatch]
 
 permissions:
   contents: read
 
 jobs:
-  build-apk:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.9"
+          gradle-version: '8.9'
 
-      - name: Find and Extract ZIP
-        shell: bash
+      - name: Find ZIP
         run: |
-          set -e
-          ZIP_FILE=$(find . -maxdepth 4 -type f -iname "*.zip" ! -path "./.git/*" | head -n 1)
-
+          ZIP_FILE=$(find . -maxdepth 4 -type f -iname '*.zip' ! -path './.git/*' | head -n 1)
           if [ -z "$ZIP_FILE" ]; then
             echo "No ZIP file found"
             exit 1
           fi
-
-          echo "Found: $ZIP_FILE"
           mkdir -p source
           unzip -oq "$ZIP_FILE" -d source
 
-      - name: Find Android Project
-        shell: bash
+      - name: Find project
         run: |
-          set -e
-          PROJECT_FILE=$(find source -type f -name settings.gradle.kts -print -quit)
-
-          if [ -z "$PROJECT_FILE" ]; then
-            PROJECT_FILE=$(find source -type f -name settings.gradle -print -quit)
-          fi
-
-          if [ -z "$PROJECT_FILE" ]; then
-            echo "Gradle project not found inside ZIP"
+          FILE=$(find source -type f \( -name settings.gradle.kts -o -name settings.gradle \) -print -quit)
+          if [ -z "$FILE" ]; then
+            echo "Gradle settings file not found"
             exit 1
           fi
-
-          PROJECT_DIR=$(dirname "$PROJECT_FILE")
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          echo "PROJECT_DIR=$(dirname "$FILE")" >> "$GITHUB_ENV"
 
       - name: Build APK
         run: |
