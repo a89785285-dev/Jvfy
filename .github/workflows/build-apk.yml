@@ -1,15 +1,80 @@
 
+      - 
+name: VANTA CODE APK Builder
+
+"on":
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
       - name: Find and Extract ZIP
+        shell: bash
         run: |
           set -e
-          ZIP_FILE=$(find . -type f -iname "*.zip" ! -path "./.git/*" ! -path "./source/*" | head -n 1)
+          ZIP_FILE=$(find . -maxdepth 4 -type f -iname "*.zip" ! -path "./.git/*" | head -n 1)
 
           if [ -z "$ZIP_FILE" ]; then
-            echo "ERROR: No ZIP file found!"
-            find . -maxdepth 3 -type f
+            echo "No ZIP file found"
             exit 1
           fi
 
-          echo "Found archive: $ZIP_FILE"
+          echo "Found: $ZIP_FILE"
           mkdir -p source
           unzip -oq "$ZIP_FILE" -d source
+
+      - name: Find Android Project
+        shell: bash
+        run: |
+          set -e
+          PROJECT_FILE=$(find source -type f -name settings.gradle.kts -print -quit)
+
+          if [ -z "$PROJECT_FILE" ]; then
+            PROJECT_FILE=$(find source -type f -name settings.gradle -print -quit)
+          fi
+
+          if [ -z "$PROJECT_FILE" ]; then
+            echo "Gradle project not found inside ZIP"
+            exit 1
+          fi
+
+          PROJECT_DIR=$(dirname "$PROJECT_FILE")
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+
+      - name: Build APK
+        run: |
+          if [ -f "$PROJECT_DIR/gradlew" ]; then
+            chmod +x "$PROJECT_DIR/gradlew"
+            "$PROJECT_DIR/gradlew" -p "$PROJECT_DIR" assembleDebug
+          else
+            gradle -p "$PROJECT_DIR" assembleDebug
+          fi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: VANTA-CODE-APK
+          path: source/**/build/outputs/apk/**/*.apk
+          if-no-files-found: error
