@@ -1,45 +1,36 @@
-plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.compose")
-}
 
-android {
-    namespace = "com.vanta.code"
-    compileSdk = 35
+name: Build VANTA CODE APK
 
-    defaultConfig {
-        applicationId = "com.vanta.code"
-        minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
-    }
+on: [push, workflow_dispatch]
 
-    buildFeatures {
-        compose = true
-    }
+permissions:
+  contents: read
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-dependencies {
-    implementation(platform("androidx.compose:compose-bom:2024.12.01"))
-    implementation("androidx.activity:activity-compose:1.10.0")
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("com.google.code.gson:gson:2.11.0")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("net.lingala.zip4j:zip4j:2.11.5")
-    implementation("org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r")
-    implementation("com.squareup:javapoet:1.13.0")
-    implementation("com.squareup:kotlinpoet:1.18.1")
-}
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build APK
+        run: |
+          gradle --no-daemon assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: VANTA-CODE-APK
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
