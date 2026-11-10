@@ -1,69 +1,15 @@
 
-name: VANTA ZIP to APK
-
-"on":
-  workflow_dispatch:
-  push:
-    paths:
-      - 'VANTA_CODE.zip'
-      - '.github/workflows/build-apk.yml'
-
-permissions:
-  contents: read
-
-jobs:
-  build-apk:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
-
-      - name: Check Android SDK
+      - name: Find and Extract ZIP
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          ls "$ANDROID_HOME/platforms"
+          set -e
+          ZIP_FILE=$(find . -type f -iname "*.zip" ! -path "./.git/*" ! -path "./source/*" | head -n 1)
 
-      - name: Extract ZIP
-        run: |
-          mkdir -p source
-          unzip -q VANTA_CODE.zip -d source
-
-      - name: Find Project
-        run: |
-          PROJECT_FILE=$(find source -name settings.gradle.kts -print -quit)
-          if [ -z "$PROJECT_FILE" ]; then
-            PROJECT_FILE=$(find source -name settings.gradle -print -quit)
-          fi
-          if [ -z "$PROJECT_FILE" ]; then
-            echo "Gradle Android project not found"
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ERROR: No ZIP file found!"
+            find . -maxdepth 3 -type f
             exit 1
           fi
-          echo "PROJECT_DIR=$(dirname "$PROJECT_FILE")" >> "$GITHUB_ENV"
 
-      - name: Build APK
-        run: |
-          if [ -f "$PROJECT_DIR/gradlew" ]; then
-            chmod +x "$PROJECT_DIR/gradlew"
-            "$PROJECT_DIR/gradlew" -p "$PROJECT_DIR" assembleDebug
-          else
-            gradle -p "$PROJECT_DIR" assembleDebug
-          fi
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: VANTA-CODE-APK
-          path: source/**/build/outputs/apk/**/*.apk
-          if-no-files-found: error
+          echo "Found archive: $ZIP_FILE"
+          mkdir -p source
+          unzip -oq "$ZIP_FILE" -d source
