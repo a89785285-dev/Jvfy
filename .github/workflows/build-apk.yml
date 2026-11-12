@@ -1,7 +1,9 @@
 
 name: VANTA APK Builder
 
-on: [push, workflow_dispatch]
+on:
+  push:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -19,43 +21,74 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Find ZIP
+      - name: Find and Extract ZIP
         run: |
-          ZIP_FILE=$(find . -maxdepth 4 -type f -iname '*.zip' ! -path './.git/*' | head -n 1)
+          ZIP_FILE=$(find . -maxdepth 5 -type f \
+            -iname '*.zip' ! -path './.git/*' \
+            -print -quit)
+
           if [ -z "$ZIP_FILE" ]; then
-            echo "No ZIP file found"
+            echo "ERROR: No ZIP file found"
             exit 1
           fi
+
+          echo "ZIP found: $ZIP_FILE"
           mkdir -p source
           unzip -oq "$ZIP_FILE" -d source
 
-      - name: Find project
+      - name: Find Gradle Project
         run: |
-          FILE=$(find source -type f \( -name settings.gradle.kts -o -name settings.gradle \) -print -quit)
+          FILE=$(find . -type f \
+            \( -name settings.gradle.kts -o -name settings.gradle \) \
+            ! -path './.git/*' \
+            -print -quit)
+
           if [ -z "$FILE" ]; then
-            echo "Gradle settings file not found"
+            echo "ERROR: Gradle settings file not found"
+            echo "Available files:"
+            find . -maxdepth 5 -type f | head -200
             exit 1
           fi
-          echo "PROJECT_DIR=$(dirname "$FILE")" >> "$GITHUB_ENV"
+
+          PROJECT_DIR=$(dirname "$FILE")
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+
+          echo "Project found: $PROJECT_DIR"
 
       - name: Build APK
         run: |
           if [ -f "$PROJECT_DIR/gradlew" ]; then
             chmod +x "$PROJECT_DIR/gradlew"
-            "$PROJECT_DIR/gradlew" -p "$PROJECT_DIR" assembleDebug
+            "$PROJECT_DIR/gradlew" \
+              -p "$PROJECT_DIR" assembleDebug
           else
             gradle -p "$PROJECT_DIR" assembleDebug
           fi
+
+      - name: Find APK
+        run: |
+          APK=$(find "$PROJECT_DIR" -type f \
+            -path '*/build/outputs/apk/*/*.apk' \
+            -print -quit)
+
+          if [ -z "$APK" ]; then
+            echo "ERROR: APK was not generated"
+            exit 1
+          fi
+
+          echo "APK_PATH=$APK" >> "$GITHUB_ENV"
+          echo "APK generated: $APK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: VANTA-CODE-APK
-          path: source/**/build/outputs/apk/**/*.apk
+          path: ${{ env.APK_PATH }}
           if-no-files-found: error
