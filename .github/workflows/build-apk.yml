@@ -40,10 +40,15 @@ jobs:
         working-directory: ./godmodeapp
         run: pnpm install
 
-      - name: Link Expo Project and Build APK
+      - name: Configure Project ID and Build APK
         working-directory: ./godmodeapp
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          eas init --account dudndidj --non-interactive --force
+          node -e '
+            const fs = require("fs");
+            let code = fs.readFileSync("app.config.ts", "utf8");
+            code += `\n// Inject EAS Project ID\nconst _orig = module.exports.default || module.exports;\nmodule.exports = (ctx) => { const res = typeof _orig === "function" ? _orig(ctx) : _orig; res.extra = { ...(res.extra || {}), eas: { ...(res.extra?.eas || {}), projectId: "b98d1fb2-1abd-4d36-b12d-824fd8452afe" } }; return res; };\n`;
+            fs.writeFileSync("app.config.ts", code);
+          '
           eas build -p android --profile preview --non-interactive --no-wait
