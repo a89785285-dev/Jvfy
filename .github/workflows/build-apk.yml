@@ -1,94 +1,45 @@
-
-name: VANTA APK Builder
+name: Build Android APK
 
 on:
   push:
+    branches: [ main ]
   workflow_dispatch:
-
-permissions:
-  contents: read
 
 jobs:
   build:
+    name: Build APK with EAS
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
+      - name: Check for EXPO_TOKEN
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "You must provide an EXPO_TOKEN secret linked to this repo to run this job."
+            exit 1
+          fi
+
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          distribution: temurin
-          java-version: '17'
+          node-version: 20
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          gradle-version: '8.9'
+          version: 9
 
-      - name: Find and Extract ZIP
-        run: |
-          ZIP_FILE=$(find . -maxdepth 5 -type f \
-            -iname '*.zip' ! -path './.git/*' \
-            -print -quit)
+      - name: Setup Expo & EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
 
-          if [ -z "$ZIP_FILE" ]; then
-            echo "ERROR: No ZIP file found"
-            exit 1
-          fi
-
-          echo "ZIP found: $ZIP_FILE"
-
-          mkdir -p source
-          unzip -oq "$ZIP_FILE" -d source
-
-      - name: Find Gradle Project
-        run: |
-          FILE=$(find source -type f \
-            \( -name settings.gradle.kts -o -name settings.gradle \) \
-            -print -quit)
-
-          if [ -z "$FILE" ]; then
-            echo "ERROR: Gradle settings file not found"
-            echo "Available files:"
-            find source -maxdepth 6 -type f | head -200
-            exit 1
-          fi
-
-          PROJECT_DIR=$(dirname "$FILE")
-
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-
-          echo "Project found: $PROJECT_DIR"
+      - name: Install dependencies
+        working-directory: ./godmodeapp
+        run: pnpm install
 
       - name: Build APK
-        run: |
-          if [ -f "$PROJECT_DIR/gradlew" ]; then
-            chmod +x "$PROJECT_DIR/gradlew"
-            "$PROJECT_DIR/gradlew" \
-              -p "$PROJECT_DIR" assembleDebug
-          else
-            gradle -p "$PROJECT_DIR" assembleDebug
-          fi
-
-      - name: Find APK
-        run: |
-          APK=$(find "$PROJECT_DIR" -type f \
-            -path '*/build/outputs/apk/*/*.apk' \
-            -print -quit)
-
-          if [ -z "$APK" ]; then
-            echo "ERROR: APK was not generated"
-            exit 1
-          fi
-
-          echo "APK_PATH=$APK" >> "$GITHUB_ENV"
-          echo "APK generated: $APK"
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: VANTA-CODE-APK
-          path: ${{ env.APK_PATH }}
-          if-no-files-found: error
+        working-directory: ./godmodeapp
+        run: eas build -p android --profile preview --non-interactive --no-wait
