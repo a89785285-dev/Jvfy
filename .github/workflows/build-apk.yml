@@ -30,11 +30,8 @@ jobs:
         with:
           version: 9
 
-      - name: Setup Expo & EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
 
       - name: Install dependencies
         working-directory: ./godmodeapp
@@ -42,4 +39,6 @@ jobs:
 
       - name: Build APK
         working-directory: ./godmodeapp
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas build -p android --profile preview --non-interactive --no-wait
