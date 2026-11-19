@@ -30,7 +30,13 @@ jobs:
           mkdir -p source-extracted
           unzip -q "$archive" -d source-extracted
           find source-extracted -type d -name .git -prune -exec rm -rf {} +
-          find source-extracted -type f \\( -name ".env" -o -name ".env.*" -o -name "*.keystore" -o -name "*.jks" -o -name "*.p12" -o -name "*.pem" -o -name "credentials.json" \\) -delete
+          while IFS= read -r -d '' file; do
+            case "$file" in
+              */.env|*/.env.*|*.keystore|*.jks|*.p12|*.pem|*/credentials.json)
+                rm -f "$file"
+                ;;
+            esac
+          done < <(find source-extracted -type f -print0)
           echo "Extracted file count:"
           find source-extracted -type f | wc -l
           echo "Top-level extracted entries:"
