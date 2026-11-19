@@ -23,7 +23,7 @@ describe("GODMODE Orchestrator", () => {
 
   it("prevents approval-gated actions from starting without approval", () => {
     const p = plan();
-    const releaseTask = p.tasks.find((task) => /release|نشر/i.test(task.title + task.deliverable));
+    const releaseTask = p.tasks.find((task) => /release|نشر|إطلاق/i.test(task.title + task.deliverable));
     expect(releaseTask).toBeDefined();
     let run = createOrchestrationRun(p);
     const target = run.tasks.find((task) => task.id === releaseTask!.id)!;
@@ -33,7 +33,7 @@ describe("GODMODE Orchestrator", () => {
 
   it("requires explicit approval before an approval-gated task can run", () => {
     const p = plan();
-    const releaseTask = p.tasks.find((task) => /release|نشر/i.test(task.title + task.deliverable))!;
+    const releaseTask = p.tasks.find((task) => /release|نشر|إطلاق/i.test(task.title + task.deliverable))!;
     let run = createOrchestrationRun(p);
     const target = run.tasks.find((task) => task.id === releaseTask.id)!;
     run = { ...run, tasks: run.tasks.map((task) => task.id === target.id ? { ...task, status: "ready" as const, dependsOn: [] } : task) };
