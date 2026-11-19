@@ -75,7 +75,12 @@ const assertApiKey = () => {
   }
 };
 
-const normalizeInputPart = (part: MessageContent) => {
+type ResponsesInputPart =
+  | { type: "input_text"; text: string }
+  | { type: "input_image"; image_url: string; detail?: "auto" | "low" | "high" }
+  | { type: "input_file"; file_url: string };
+
+const normalizeInputPart = (part: MessageContent): ResponsesInputPart => {
   if (typeof part === "string") return { type: "input_text", text: part };
   if (part.type === "text") return { type: "input_text", text: part.text };
   if (part.type === "image_url") {
@@ -95,9 +100,10 @@ const normalizeInputMessage = (message: Message) => {
   const role = message.role === "tool" || message.role === "function" ? "user" : message.role;
   const parts = Array.isArray(message.content) ? message.content : [message.content];
   const normalized = parts.map(normalizeInputPart);
+  const firstPart = normalized[0];
   const content =
-    normalized.length === 1 && normalized[0].type === "input_text"
-      ? normalized[0].text
+    normalized.length === 1 && firstPart.type === "input_text"
+      ? firstPart.text
       : normalized;
   return { role, content };
 };
