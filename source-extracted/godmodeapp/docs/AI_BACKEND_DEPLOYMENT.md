@@ -11,7 +11,7 @@ This project has two separate deliverables:
 2. Use the repository's root `render.yaml` Blueprint, or enter these settings manually:
    - Runtime: Node
    - Root directory: `source-extracted/godmodeapp`
-   - Build command: `corepack enable && pnpm install --frozen-lockfile`
+   - Build command: `corepack enable && pnpm install --frozen-lockfile --prod=false`
    - Start command: `pnpm start:server`
    - Health check path: `/api/health`
 3. Set these environment variables in the Render service dashboard:
@@ -38,7 +38,7 @@ The EAS profiles explicitly select their matching EAS environment. The app reads
 ## 3. Verify
 
 - `GET /api/health` should return HTTP 200 and `{"ok":true,...}`.
-- The app's dashboard should show the server AI engine as ready after the backend has an API key.
+- The app's dashboard should show the server AI engine as configured after the backend has an API key.
 - In Prompt Studio, test each mode with a harmless short prompt.
 - If the service returns 429, wait one minute; the public AI mutation is limited to 8 requests per IP per minute.
 - If AI is not configured, check the Render service logs and its `AI_API_KEY`, `AI_API_BASE_URL`, and `AI_MODEL` settings. Never share the key when asking for help.
