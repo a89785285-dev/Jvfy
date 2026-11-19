@@ -12,7 +12,7 @@ const HISTORY_KEY = "godmode.history.v1";
 const DATASET_KEY = "godmode.dataset.v1";
 const SETTINGS_KEY = "godmode.settings.v1";
 const rules: Array<[string, string, RegExp, Severity, number, string]> = [
-  ["P001", "hierarchy_manipulation", /ignore\s+(all|any|previous|prior)\s+(instructions|rules)/i, "high", 0.95, "Attempts to override the instruction hierarchy."],
+  ["P001", "hierarchy_manipulation", /ignore\s+(?:(?:all|any)\s+)?(?:previous|prior)\s+(?:instructions|rules)|ignore\s+(?:all|any)\s+(?:instructions|rules)/i, "high", 0.95, "Attempts to override the instruction hierarchy."],
   ["P002", "hidden_instruction_extraction", /(reveal|show|print|extract).{0,40}(system|hidden|secret|internal).{0,20}(prompt|instruction|message)/is, "high", 0.9, "Requests hidden or internal instructions."],
   ["P003", "persona_manipulation", /(pretend|act|roleplay|you are now).{0,50}(unrestricted|developer|system|evil|different)/i, "medium", 0.82, "Attempts to alter the assistant persona or authority."],
   ["P004", "refusal_suppression", /(do not|never|without).{0,30}(refuse|warn|mention safety|say no)/i, "medium", 0.8, "Attempts to suppress safe refusal behavior."],
