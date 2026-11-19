@@ -16,12 +16,12 @@ This project has two separate deliverables:
    - Health check path: `/api/health`
 3. Set these environment variables in the Render service dashboard:
    - `AI_API_BASE_URL=https://api.openai.com`
-   - `AI_MODEL=gpt-4o-mini`
+   - `AI_MODEL=gpt-6-luna`
    - `AI_API_KEY` = the secret API key from the provider
 4. Save and deploy. Do not paste the key into GitHub, chat, source files, or the APK.
 5. Confirm that opening `https://YOUR-SERVICE.onrender.com/api/health` returns JSON containing `"ok":true`.
 
-The service uses an OpenAI-compatible Chat Completions API. For another compatible provider, set `AI_API_BASE_URL` to that provider's API root (or its `/v1` root) and set `AI_MODEL` to a model supported by that provider. Keep the API key only in the backend host's secret environment variable.
+The service uses an OpenAI Responses API-compatible endpoint. For another compatible provider, set `AI_API_BASE_URL` to that provider's API root (or its `/v1` root) and set `AI_MODEL` to a model supported by that provider. Keep the API key only in the backend host's secret environment variable.
 
 ## 2. Point EAS builds at the backend
 
