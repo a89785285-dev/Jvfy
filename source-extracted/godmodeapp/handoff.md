@@ -10,7 +10,7 @@
 - تمت إضافة شاشة GENESIS وربطها بلوحة Dashboard.
 - تم إصلاح عدم توافق نوعي في server/godmode.ts؛ نوع content في عقد invokeLLM نصّي، وتم الإبقاء على استيراد router وpublicProcedure من ملف tRPC.
 - ملاحظة صريحة: النسخة الحالية محرك تخطيط محلي قائم على قواعد قابلة للتفسير؛ الأدوار ليست نماذج AI مستقلة ولا تنفذ مهام برمجية تلقائياً بعد. ربط النماذج والتنفيذ الفعلي مرحلة لاحقة.
-- تم سابقاً تأكيد نجاح بناء APK عبر GitHub Actions run 44530741732، مع artifact باسم GODMODE-Mobile-Android-APK (صلاحية 14 يوماً من وقت البناء).
+- نجح بناء APK في GitHub Actions run `44544195446` وظهر artifact باسم `GODMODE-Mobile-Android-APK`، لكن فحص الملف بعد تنزيله كشف أنه غير موقّع؛ لذلك قد يرفضه Android برسالة تعذّر تحليل الحزمة. تمت إضافة خطوة توقيع تلقائي بمفتاح اختبار مؤقت عبر `apksigner`، وخطوة تحقق إلزامية من التوقيع قبل رفع artifact. يجب انتظار run الجديد والتأكد من نجاح `apksigner verify` قبل تسليم APK.
 
 ## الملفات التي تعمل عليها
 - `source-extracted/godmodeapp/lib/genesis.ts`
@@ -32,6 +32,7 @@
 - إصلاح عدم توافق نوعي في مخرجات محرك LLM داخل server/godmode.ts مع الحفاظ على استيرادات tRPC المطلوبة.
 
 ## المحاولات التي فشلت
+- run `44544195446` نجح في إنشاء APK ورفع artifact، لكن الفحص المحلي للملف أظهر `jar is unsigned`؛ أي أن حزمة الإصدار لم تحمل توقيع APK. تم تعديل workflow لإنشاء مفتاح اختبار مؤقت وتوقيع الملف بواسطة Android `apksigner` ثم التحقق من صحة التوقيع قبل رفعه. مفتاح الاختبار مخصص للتثبيت والاختبار فقط، وليس توقيع إصدار إنتاج أو تحديثات مستمرة.
 - تعذر بناء APK في run `44536644782` بعد نجاح Expo Prebuild؛ فشل Gradle أثناء تهيئة included build الخاص بـ React Native لأن Maven Central لم يُرجع عدة artifacts منشورة (Kotlin وjava-diff-utils). أضيف init script إلى workflow يضيف Google-hosted Maven Central mirror لكل project build بما فيها included builds، مع إبقاء المستودعات الأصلية كبدائل.
 - تعذر فك محتوى ملفات GitHub API المشفر ضمن جلسة Code Mode لعدم توفر Buffer/atob؛ تم تجاوز ذلك بقراءة الملفات النصية من raw.githubusercontent.com.
 - أول تحقق TypeScript بعد إضافة GENESIS كشف فرع array غير ممكن في نوع content؛ بعد إصلاحه كشف التحقق أن استيرادات tRPC لم تُضمّن في إعادة كتابة الملف؛ تمت إضافتها مجدداً. ثم كشف Vitest أن قاعدة P001 لا تلتقط صيغة شائعة هي Ignore all previous instructions؛ تم توسيع التعبير النمطي لتغطية هذه الصيغة.
