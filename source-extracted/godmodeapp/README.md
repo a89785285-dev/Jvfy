@@ -1,6 +1,6 @@
 # GODMODE Mobile
 
-تطبيق Android مبني على Expo/React Native. تعمل أدوات Prompt Analyzer وResponse Evaluator وDataset محليًا، بينما يستخدم Prompt Studio خادم Node.js مستقلًا للاتصال بمزوّد ذكاء اصطناعي متوافق مع OpenAI. مفتاح المزوّد محفوظ على الخادم فقط ولا يوضع داخل APK. النصوص المدخلة تعامل كبيانات غير موثوقة ولا يتم تنفيذها.
+تطبيق Android مبني على Expo/React Native. تعمل أدوات Prompt Analyzer وResponse Evaluator وDataset محليًا، بينما يستخدم Prompt Studio خادم Node.js مستقلًا للاتصال بمزوّد متوافق مع OpenAI Responses API. مفتاح المزوّد محفوظ على الخادم فقط ولا يوضع داخل APK. النصوص المدخلة تعامل كبيانات غير موثوقة ولا يتم تنفيذها.
 
 ## التشغيل أثناء التطوير
 
