@@ -16,6 +16,8 @@ async function startServer() {
   // Render and similar reverse-proxy hosts forward the real client IP in X-Forwarded-For.
   app.set("trust proxy", 1);
 
+  app.use(createCorsMiddleware());
+
   // Protect the public AI mutation from accidental or abusive high-volume usage.
   const aiRequestWindows = new Map<string, { startedAt: number; count: number }>();
   app.use("/api/trpc/godmode.run", (req, res, next) => {
@@ -40,7 +42,6 @@ async function startServer() {
     next();
   });
 
-  app.use(createCorsMiddleware());
   app.use(clearLegacySessionCookie());
 
   app.use(express.json({ limit: "50mb" }));
