@@ -1,32 +1,35 @@
 # Handoff — GODMODE Mobile
 
 ## الهدف
-تطوير التطبيق الحالي مع الحفاظ على العمل على الفرع `prompt-forge/inspect-source` وعدم تعديل `main`.
+تطوير التطبيق الحالي وإتاحة بناء APK دون الاعتماد على رصيد EAS، مع الحفاظ على العمل على الفرع `prompt-forge/inspect-source` وعدم تعديل `main`.
 
 ## أين وصلت
-- توسعة Prompt Analyzer بطبقة semantic heuristic قابلة للتفسير تجمع مجموعات مفاهيم مترابطة.
-- إضافة اختبارات Vitest للتحليل العربي والإنجليزي والإشارات الدلالية والحالات السليمة.
-- تحسين شاشة Response Evaluator لعرض درجات الأبعاد وتفسيراتها والتنبيهات بالعربية.
+- تم تجهيز workflow لبناء APK مباشرةً على GitHub Actions باستخدام Expo Prebuild وAndroid Gradle.
+- تم إزالة اعتماد workflow الخاص بـ GODMODE على EAS CLI و`EXPO_TOKEN`.
+- لم يتم تأكيد نجاح بناء APK بعد؛ يجب تشغيل workflow ومراجعة نتيجته وartifact الناتج.
 
 ## الملفات التي تعمل عليها
-- `lib/godmode.ts`
-- `lib/semantic-detection.ts`
-- `lib/godmode.test.ts`
-- `app/(tabs)/evaluator.tsx`
+- `.github/workflows/build-godmode-apk.yml`
+- `source-extracted/godmodeapp/README.md`
+- `source-extracted/godmodeapp/APK_BUILD.md`
+- `source-extracted/godmodeapp/handoff.md`
 
 ## التعديلات التي صارت
-- ربط طبقة semantic detection بمحرك Prompt Analyzer.
-- طبقة semantic تعتمد على مجموعات عبارات عربية وإنجليزية قابلة للتفسير، ولا تدّعي أنها نموذج تعلم آلي.
-- إضافة اختبار لاكتشاف تعليمات تجاوز السياق، واختبار تطبيع النص العربي، واختبار عدم إطلاق إشارة دلالية على طلب عادي.
-- إضافة تحقق أساسي من بنية نتيجة Response Evaluator.
-- تحسين شاشة التقييم: حالة تحميل، ورسائل إدخال/حفظ، وتسميات عربية للأبعاد، وشرح كل درجة، وملاحظات حدود المنهج.
+- إعداد Node.js 22 وpnpm 9.12 وJava 17 وAndroid SDK على GitHub Actions.
+- تثبيت الاعتماديات من lockfile دون تغييره.
+- توليد مشروع Android بواسطة `expo prebuild --platform android --no-install --clean`.
+- بناء APK عبر `./gradlew --no-daemon assembleRelease`.
+- التحقق من ملف APK ورفعه كـ artifact باسم `GODMODE-Mobile-Android-APK` لمدة 14 يومًا.
+- توثيق طريقة تشغيل البناء وتنزيل artifact.
+- APK مبني بالإعداد الافتراضي debug signing؛ مناسب للاختبار وليس توقيع إصدار Google Play.
 
 ## المحاولات التي فشلت
-- أظهر فحص TypeScript الأول أن نوع طبقة Detection لا يتضمن semantic؛ تم توسيع الاتحاد ليشملها.
-- فشل فحص Expo على commit سابق أثناء TypeScript check، ثم أُصلح النوع في commit لاحق.
-- ما زال يلزم انتظار إعادة CI للتأكد من عدم وجود أخطاء إضافية، ولم يتم تأكيد إنشاء APK.
+- بناء EAS توقف لأن حساب Expo استنفد حصة Android المجانية حتى موعد إعادة التعيين.
+- workflow السابق في GitHub كان يستدعي EAS أيضًا، ولذلك لم يكن بديلًا فعليًا.
+- فشل فحص TypeScript في تشغيل تحقق سابق بسبب أخطاء موجودة في `lib/semantic-detection.ts` و`server/godmode.ts`. يجب مراجعتها بشكل منفصل؛ أخطاء TypeScript لا تعني بحد ذاتها أن Gradle build سينجح أو يفشل.
 
 ## الخطوة القادمة
-- انتظار نتائج CI وفحص أي أخطاء TypeScript أو Vitest وإصلاحها.
-- تحسين دقة تقييم الردود بإضافة حالات اختبار سلبية وإيجابية أكثر قبل توسيع قواعد الكشف.
-- بعد اجتياز الاختبارات، تطوير Prompt Studio.
+- تشغيل **Build GODMODE Android APK** من تبويب Actions على الفرع `prompt-forge/inspect-source`.
+- إذا فشل، مراجعة أول خطوة حمراء وإصلاح سببها.
+- إذا نجح، تنزيل artifact وتجربة تثبيته على جهاز Android.
+- معالجة أخطاء TypeScript المذكورة وتشغيل الاختبارات قبل اعتبار التحقق البرمجي مكتملًا.
