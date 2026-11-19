@@ -1,22 +1,31 @@
 # Android APK Build
 
-المشروع مهيأ لإنتاج APK عبر Expo/EAS. بيئة Sandbox تتحقق من المصدر وMetro فقط ولا تنفذ Android release build.
+## الطريقة المعتمدة: GitHub Actions (من دون EAS)
 
-## من Dashboard
+يُنشئ GitHub Actions مشروع Android الأصلي من إعدادات Expo ثم يبني APK باستخدام Gradle. لا يحتاج هذا المسار إلى حساب EAS مدفوع أو متغير سرّي باسم `EXPO_TOKEN`.
 
-1. افتح مشروع **GODMODE Mobile** في Dashboard.
-2. استخدم **Build Android**.
-3. اختر profile: `preview` للحصول على ملف `.apk` قابل للتثبيت والاختبار.
-4. انتظر نتيجة البناء ثم نزّل artifact الناتج وثبّته على جهاز Android.
+### تشغيل البناء
 
-ملف `eas.json` يضبط profile `preview` على `distribution: internal` و`android.buildType: apk`. لا تعتبر APK مكتملة أو قابلة للتنزيل قبل ظهور نتيجة build ناجحة فعلية من Dashboard/EAS.
+1. افتح مستودع GODMODE على GitHub ثم تبويب **Actions**.
+2. اختر **Build GODMODE Android APK**.
+3. اختر الفرع `prompt-forge/inspect-source` ثم اضغط **Run workflow**.
+4. انتظر حتى تصبح جميع خطوات التشغيل خضراء.
+5. افتح التشغيل الناجح، ثم نزّل artifact باسم `GODMODE-Mobile-Android-APK`.
 
-## ما تم التحقق منه هنا
+يمكن أيضًا تشغيله تلقائيًا عند دفع تغييرات إلى مجلد التطبيق على فرع العمل.
 
-- `pnpm check` ناجح.
-- `pnpm test -- --run` ناجح: 27 اختبارًا ناجحًا، واختبار قالب واحد متخطى.
-- `pnpm db:push` ناجح ولا توجد تغييرات schema معلقة.
-- Metro على 8081 أعاد HTTP 200 بعد bundling.
-- API على 3000 بدأ بنجاح.
+### ما الذي ينفذه الـ workflow؟
 
-اختبار APK native على جهاز Android يبقى مطلوبًا بعد استخراج artifact.
+- تثبيت Node.js وpnpm وJava وAndroid SDK.
+- تثبيت الاعتماديات باستخدام `pnpm install --frozen-lockfile`.
+- توليد مجلد Android عبر `expo prebuild`.
+- بناء `assembleRelease` بواسطة Gradle.
+- التحقق من وجود APK ورفعه كـ artifact لمدة 14 يومًا.
+
+### التوقيع والاستخدام
+
+APK الناتج موقّع بمفتاح debug الافتراضي الذي ينشئه Android Gradle Plugin عند عدم إعداد مفتاح release. هذا مناسب للتثبيت والاختبار على جهاز Android، لكنه ليس توقيع إصدار إنتاجي للنشر على Google Play. لا تضع مفاتيح توقيع أو مفاتيح API داخل المستودع.
+
+### حدود التحقق
+
+نجاح حفظ ملف workflow لا يعني أن APK بُني بالفعل. لا يُعتبر البناء ناجحًا إلا بعد اكتمال GitHub Actions بنجاح وظهور artifact قابل للتنزيل. إذا فشل التشغيل، افحص أول خطوة حمراء وسجلاتها قبل إجراء تغييرات أخرى.
