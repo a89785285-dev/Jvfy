@@ -8,5 +8,5 @@ export const ENV = {
   // AI credentials are server-only. Never expose these through EXPO_PUBLIC_* variables.
   aiApiUrl: process.env.AI_API_BASE_URL ?? process.env.BUILT_IN_FORGE_API_URL ?? "https://api.openai.com",
   aiApiKey: process.env.AI_API_KEY ?? process.env.BUILT_IN_FORGE_API_KEY ?? "",
-  aiModel: process.env.AI_MODEL ?? "gpt-4o-mini",
+  aiModel: process.env.AI_MODEL ?? "gpt-6-luna",
 };
