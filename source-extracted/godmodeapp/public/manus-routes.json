@@ -1,0 +1,1 @@
+{"routes":[{"path":"/","title":"GODMODE Dashboard"},{"path":"/analyzer","title":"Prompt Analyzer"},{"path":"/evaluator","title":"Response Evaluator"},{"path":"/dataset","title":"Dataset Builder"},{"path":"/settings","title":"Settings"},{"path":"/history","title":"Analysis History"},{"path":"/about","title":"About GODMODE"}]}
