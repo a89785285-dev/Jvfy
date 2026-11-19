@@ -1,42 +1,39 @@
 # Handoff — GODMODE Mobile
 
 ## الهدف
-تطوير التطبيق الحالي وإتاحة بناء APK دون الاعتماد على رصيد EAS، مع الحفاظ على العمل على الفرع `prompt-forge/inspect-source` وعدم تعديل `main`.
+تطوير تطبيق GODMODE Mobile الحالي على الفرع `prompt-forge/inspect-source`، وعدم تعديل `main` أو دمج التغييرات إليه دون طلب صريح. الأولوية لبناء أنظمة حقيقية قابلة للاختبار، وليس واجهات شكلية.
 
 ## أين وصلت
-- تم تجهيز workflow لبناء APK مباشرةً على GitHub Actions باستخدام Expo Prebuild وAndroid Gradle.
-- تم إزالة اعتماد workflow الخاص بـ GODMODE على EAS CLI و`EXPO_TOKEN`.
-- المحاولة الأولى وصلت إلى إعداد Android SDK ثم توقفت عند طلب قبول تراخيص SDK بشكل تفاعلي.
-- المحاولة التالية كشفت أن `android-actions/setup-android@v3` يفشل عند طلب حزمة قديمة `tools` غير متاحة في مستودع SDK (`Failed to find package 'tools'`).
-- المحاولة التالية فشلت لأن متغير `ANDROID_HOME`/مسار `cmdline-tools/latest/bin` لم يوفرا `sdkmanager` على runner (`sdkmanager: command not found`).
-- تم استبدال الاعتماد على SDK المفترض وجوده بتنزيل Android command-line tools الرسمية مباشرةً من Google، وتثبيتها تحت SDK root محدد، ثم قبول التراخيص وتثبيت platform-tools وAndroid API 36 وBuild Tools 36.0.0.
-- لم يتم تأكيد نجاح بناء APK بعد؛ يجب مراجعة تشغيل workflow الجديد وartifact الناتج.
+- تم بناء GODMODE GENESIS كأول نواة لتخطيط المشاريع.
+- GENESIS يستقبل وصف الفكرة محلياً، ويصنف نوع المشروع، وينتج معمارية أولية، وست مراحل تنفيذ، و18 مهمة، وستة أدوار تخصصية، وسجل مخاطر ومعايير قبول.
+- يمكن متابعة حالة كل مهمة بين pending وin_progress وdone، وحفظ آخر خطة محلياً باستخدام AsyncStorage.
+- تمت إضافة شاشة GENESIS وربطها بلوحة Dashboard.
+- ملاحظة صريحة: النسخة الحالية محرك تخطيط محلي قائم على قواعد قابلة للتفسير؛ الأدوار ليست نماذج AI مستقلة ولا تنفذ مهام برمجية تلقائياً بعد. ربط النماذج والتنفيذ الفعلي مرحلة لاحقة.
+- تم سابقاً تأكيد نجاح بناء APK عبر GitHub Actions run 44530741732، مع artifact باسم GODMODE-Mobile-Android-APK (صلاحية 14 يوماً من وقت البناء).
 
 ## الملفات التي تعمل عليها
-- `.github/workflows/build-godmode-apk.yml`
-- `source-extracted/godmodeapp/README.md`
-- `source-extracted/godmodeapp/APK_BUILD.md`
+- `source-extracted/godmodeapp/lib/genesis.ts`
+- `source-extracted/godmodeapp/lib/genesis.test.ts`
+- `source-extracted/godmodeapp/app/(tabs)/genesis.tsx`
+- `source-extracted/godmodeapp/app/(tabs)/_layout.tsx`
+- `source-extracted/godmodeapp/app/(tabs)/index.tsx`
 - `source-extracted/godmodeapp/handoff.md`
 
 ## التعديلات التي صارت
-- إعداد Node.js 22 وpnpm 9.12 وJava 17 وAndroid SDK على GitHub Actions.
-- إزالة `android-actions/setup-android@v3` لأنه يستدعي تثبيت الحزمة القديمة `tools` التي لم تعد متاحة.
-- إضافة خطوات تنزّل Android command-line tools الرسمية من Google وتثبّتها صراحةً في `$ANDROID_HOME/cmdline-tools/latest`، ثم تضبط `ANDROID_HOME` و`ANDROID_SDK_ROOT` وPATH وتثبت platform-tools وAndroid API 36 وBuild Tools 36.0.0.
-- تثبيت الاعتماديات من lockfile دون تغييره.
-- توليد مشروع Android بواسطة `expo prebuild --platform android --no-install --clean`.
-- بناء APK عبر `./gradlew --no-daemon --stacktrace assembleRelease`.
-- التحقق من ملف APK ورفعه كـ artifact باسم `GODMODE-Mobile-Android-APK` لمدة 14 يومًا.
-- APK مبني بالإعداد الافتراضي debug signing؛ مناسب للاختبار وليس توقيع إصدار Google Play.
+- إضافة مولّد مخطط مشروع بست مراحل: Discovery, System Design, Foundation, Core Features, Validation, Delivery.
+- إضافة ستة أدوار: Architect, Researcher, Experience, Builder, Sentinel, Release.
+- إضافة 18 مهمة بمخرجات محددة وقابلة للتحقق.
+- إضافة تصنيف أولي لأنواع المشاريع: mobile, web, ai, game, general، مع اقتراح بنية مختلفة لكل نوع.
+- إضافة سجل مخاطر ومعايير قبول وخطوة تالية.
+- إضافة تتبع تقدم المهام وحفظ الخطة محلياً.
+- إضافة اختبارات وحدات لمحرك GENESIS.
 
 ## المحاولات التي فشلت
-- بناء EAS توقف لأن حساب Expo استنفد حصة Android المجانية حتى موعد إعادة التعيين.
-- workflow السابق في GitHub كان يستدعي EAS أيضًا، ولذلك لم يكن بديلًا فعليًا.
-- أول تشغيل لبناء GitHub Actions توقف عند مطالبة قبول 7 تراخيص Android SDK بصورة تفاعلية.
-- التشغيل التالي فشل لأن `sdkmanager` لم يكن موجودًا على PATH (`sdkmanager: command not found`)؛ لم يصل إلى تثبيت الاعتماديات أو توليد Android.
-- فشل فحص TypeScript في تشغيل تحقق سابق بسبب أخطاء موجودة في `lib/semantic-detection.ts` و`server/godmode.ts`. يجب مراجعتها بشكل منفصل.
+- تعذر فك محتوى ملفات GitHub API المشفر ضمن جلسة Code Mode لعدم توفر Buffer/atob؛ تم تجاوز ذلك بقراءة الملفات النصية من raw.githubusercontent.com.
+- لا توجد نتيجة تحقق TypeScript أو Vitest لهذه الدفعة حتى الآن؛ يجب عدم وصفها بأنها اجتازت الاختبارات قبل تشغيل workflow والتحقق من سجلاته.
 
 ## الخطوة القادمة
-- مراجعة تشغيل **Build GODMODE Android APK** بعد تنزيل command-line tools الرسمية وتثبيتها صراحةً.
-- إذا فشل، مراجعة أول خطوة حمراء وإصلاح سببها.
-- إذا نجح، تنزيل artifact وتجربة تثبيته على جهاز Android.
-- معالجة أخطاء TypeScript المذكورة وتشغيل الاختبارات قبل اعتبار التحقق البرمجي مكتملًا.
+- تشغيل والتحقق من TypeScript وVitest وExpo lint عبر GitHub Actions.
+- إصلاح أي أخطاء تظهر من السجلات.
+- بناء APK جديد والتحقق من artifact.
+- المرحلة التالية بعد استقرار GENESIS: بناء Orchestrator حقيقي يربط موفري النماذج بوكلاء متخصصين، مع موافقات بشرية قبل أي تعديل ملفات أو نشر أو إجراء خارجي، وإدارة آمنة للمفاتيح على الخادم.
