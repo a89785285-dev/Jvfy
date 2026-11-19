@@ -100,10 +100,34 @@ jobs:
           cd android
           ./gradlew --init-script "$RUNNER_TEMP/maven-central-mirror.init.gradle" --no-daemon --stacktrace assembleRelease
 
-      - name: Verify APK output
+      - name: Sign release APK for direct installation
+        run: |
+          APK="android/app/build/outputs/apk/release/app-release.apk"
+          SIGNED_APK="$RUNNER_TEMP/app-release-signed.apk"
+          KEYSTORE="$RUNNER_TEMP/godmode-debug.keystore"
+          keytool -genkeypair -v \
+            -keystore "$KEYSTORE" \
+            -storepass android \
+            -keypass android \
+            -alias androiddebugkey \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign \
+            --ks "$KEYSTORE" \
+            --ks-key-alias androiddebugkey \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --out "$SIGNED_APK" \
+            "$APK"
+          mv "$SIGNED_APK" "$APK"
+
+      - name: Verify signed APK output
         run: |
           APK="android/app/build/outputs/apk/release/app-release.apk"
           test -s "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
           ls -lh "$APK"
 
       - name: Upload APK artifact
