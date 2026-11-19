@@ -1,6 +1,5 @@
-import "dotenv/config";
 import express from "express";
-import { createServer } from "http";
+import type { Express } from "express";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
@@ -9,16 +8,18 @@ import { createContext } from "./context";
 import { createCorsMiddleware } from "./cors";
 import { clearLegacySessionCookie } from "./cookies";
 
-async function startServer() {
-  const app = express();
-  const server = createServer(app);
-
-  // Render and similar reverse-proxy hosts forward the real client IP in X-Forwarded-For.
+/**
+ * Attach GODMODE API routes and middleware to an Express app.
+ * The app can then be exported to Vercel or listened to by the standalone server.
+ */
+export function configureApp(app: Express): Express {
+  // Vercel, Render, and similar reverse-proxy hosts forward the client IP.
   app.set("trust proxy", 1);
 
   app.use(createCorsMiddleware());
 
-  // Protect the public AI mutation from accidental or abusive high-volume usage.
+  // Best-effort per-instance protection for the public AI mutation.
+  // This is not a persistent or globally shared quota across server instances.
   const aiRequestWindows = new Map<string, { startedAt: number; count: number }>();
   app.use("/api/trpc/godmode.run", (req, res, next) => {
     const now = Date.now();
@@ -33,7 +34,6 @@ async function startServer() {
       current.count += 1;
     }
 
-    // Bound memory use if many distinct clients reach the service.
     if (aiRequestWindows.size > 5000) {
       for (const [key, value] of aiRequestWindows) {
         if (now - value.startedAt >= 60_000) aiRequestWindows.delete(key);
@@ -62,13 +62,5 @@ async function startServer() {
     }),
   );
 
-  const port = parseInt(process.env.PORT || "3000");
-  server.listen(port, () => {
-    console.log("[api] server listening");
-  });
+  return app;
 }
-
-startServer().catch((error) => {
-  console.error("[api] server failed to start", error instanceof Error ? error.message : "unknown error");
-  process.exitCode = 1;
-});

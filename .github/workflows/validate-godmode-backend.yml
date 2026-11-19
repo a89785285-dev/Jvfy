@@ -40,5 +40,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: TypeScript check
         run: pnpm check
-      - name: Bundle API server
-        run: pnpm exec esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist-validation
+      - name: Bundle Vercel Express entrypoint
+        run: pnpm exec esbuild server.ts --platform=node --packages=external --bundle --format=esm --outdir=dist-validation/vercel
+      - name: Bundle standalone Express entrypoint
+        run: pnpm exec esbuild server/_core/start.ts --platform=node --packages=external --bundle --format=esm --outdir=dist-validation/standalone

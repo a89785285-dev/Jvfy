@@ -2,7 +2,7 @@
 
 تطبيق Android مبني على Expo/React Native. تعمل أدوات Prompt Analyzer وResponse Evaluator وDataset محليًا، بينما يستخدم Prompt Studio خادم Node.js مستقلًا للاتصال بمزوّد متوافق مع OpenAI Responses API. مفتاح المزوّد محفوظ على الخادم فقط ولا يوضع داخل APK. النصوص المدخلة تعامل كبيانات غير موثوقة ولا يتم تنفيذها.
 
-## التشغيل أثناء التطوير
+## تشغيل الخادم أثناء التطوير
 
 ```bash
 pnpm install
@@ -11,7 +11,7 @@ pnpm test
 pnpm dev
 ```
 
-تستخدم الوظائف المحلية AsyncStorage. يحتاج Prompt Studio إلى نشر API أولاً وضبط `AI_API_KEY` و`AI_API_BASE_URL` و`AI_MODEL` على الخادم. راجع [دليل نشر خادم AI](./docs/AI_BACKEND_DEPLOYMENT.md). لا تضع أي مفتاح API في متغيرات `EXPO_PUBLIC_*` أو في إعدادات بناء APK.
+تستخدم الوظائف المحلية AsyncStorage. يحتاج Prompt Studio إلى نشر API أولاً وضبط `AI_API_KEY` و`AI_API_BASE_URL` و`AI_MODEL` على الخادم. راجع [دليل نشر خادم AI على Vercel](./docs/VERCEL_DEPLOYMENT.md). لا تضع أي مفتاح API في متغيرات `EXPO_PUBLIC_*` أو في إعدادات بناء APK.
 
 ## إنتاج APK
 
