@@ -32,6 +32,7 @@
 - إصلاح عدم توافق نوعي في مخرجات محرك LLM داخل server/godmode.ts مع الحفاظ على استيرادات tRPC المطلوبة.
 
 ## المحاولات التي فشلت
+- تعذر بناء APK في run `44536644782` بعد نجاح Expo Prebuild؛ فشل Gradle أثناء تهيئة included build الخاص بـ React Native لأن Maven Central لم يُرجع عدة artifacts منشورة (Kotlin وjava-diff-utils). أضيف init script إلى workflow يضيف Google-hosted Maven Central mirror لكل project build بما فيها included builds، مع إبقاء المستودعات الأصلية كبدائل.
 - تعذر فك محتوى ملفات GitHub API المشفر ضمن جلسة Code Mode لعدم توفر Buffer/atob؛ تم تجاوز ذلك بقراءة الملفات النصية من raw.githubusercontent.com.
 - أول تحقق TypeScript بعد إضافة GENESIS كشف فرع array غير ممكن في نوع content؛ بعد إصلاحه كشف التحقق أن استيرادات tRPC لم تُضمّن في إعادة كتابة الملف؛ تمت إضافتها مجدداً. ثم كشف Vitest أن قاعدة P001 لا تلتقط صيغة شائعة هي Ignore all previous instructions؛ تم توسيع التعبير النمطي لتغطية هذه الصيغة.
 - لا توجد نتيجة تحقق TypeScript أو Vitest لهذه الدفعة بعد الإصلاح الأخير؛ يجب عدم وصفها بأنها اجتازت الاختبارات قبل تشغيل workflow والتحقق من سجلاته.
@@ -39,5 +40,5 @@
 ## الخطوة القادمة
 - تشغيل والتحقق من TypeScript وVitest وExpo lint عبر GitHub Actions.
 - إصلاح أي أخطاء تظهر من السجلات.
-- بناء APK جديد والتحقق من artifact.
+- إعادة بناء APK بعد إضافة fallback لمستودع Maven Central، ثم التحقق من artifact.
 - المرحلة التالية بعد استقرار GENESIS: بناء Orchestrator حقيقي يربط موفري النماذج بوكلاء متخصصين، مع موافقات بشرية قبل أي تعديل ملفات أو نشر أو إجراء خارجي، وإدارة آمنة للمفاتيح على الخادم.

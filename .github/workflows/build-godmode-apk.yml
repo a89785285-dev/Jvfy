@@ -74,11 +74,30 @@ jobs:
       - name: Generate native Android project
         run: pnpm exec expo prebuild --platform android --no-install --clean
 
+      - name: Configure Maven Central mirror fallback
+        run: |
+          cat > "$RUNNER_TEMP/maven-central-mirror.init.gradle" <<'GRADLE'
+          // Add Google's Maven Central mirror to every project build, including
+          // the included React Native Gradle plugin build. Keep original repos
+          // as fallbacks for artifacts not yet synchronized to the mirror.
+          gradle.beforeProject { project ->
+            project.buildscript.repositories.maven {
+              name = "googleMavenCentralMirror"
+              url = uri("https://maven-central.storage-download.googleapis.com/maven2/")
+            }
+            project.repositories.maven {
+              name = "googleMavenCentralMirror"
+              url = uri("https://maven-central.storage-download.googleapis.com/maven2/")
+            }
+          }
+          GRADLE
+          echo "Configured Google-hosted Maven Central mirror fallback."
+
       - name: Build installable release APK
         run: |
           chmod +x android/gradlew
           cd android
-          ./gradlew --no-daemon --stacktrace assembleRelease
+          ./gradlew --init-script "$RUNNER_TEMP/maven-central-mirror.init.gradle" --no-daemon --stacktrace assembleRelease
 
       - name: Verify APK output
         run: |
