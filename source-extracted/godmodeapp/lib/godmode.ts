@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { detectSemanticSignals } from "./semantic-detection";
 
 export type Severity = "low" | "medium" | "high" | "critical";
-export type Detection = { ruleId: string; layer: "pattern" | "heuristic"; category: string; severity: Severity; confidence: number; evidence: string; explanation: string };
+export type Detection = { ruleId: string; layer: "pattern" | "heuristic" | "semantic"; category: string; severity: Severity; confidence: number; evidence: string; explanation: string };
 export type AnalysisResult = { riskScore: number; classification: string; layerScores: Record<string, number>; signals: Detection[]; explanation: string; createdAt: string };
 export type EvaluationResult = { overallScore: number; scores: Record<string, number>; explanations: Record<string, string>; warnings: string[]; method: "deterministic"; createdAt: string };
 export type DatasetCase = { caseId: string; schemaVersion: "1.0"; createdAt: string; category: string; subcategory: string; inputText: string; expectedBehavior: string; expectedLabel: string; severity: Severity; tags: string[]; sourceType: string; language: string; metadata: Record<string, string> };
