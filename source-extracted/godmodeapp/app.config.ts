@@ -6,7 +6,10 @@ const timestamp = bundleId.split(".").pop()?.replace(/^t/, "") ?? "";
 const scheme = `manus${timestamp}`;
 const config: ExpoConfig = {
   name: "GODMODE Mobile", slug: "godmodeapp", version: "1.0.0", orientation: "portrait", userInterfaceStyle: "dark", icon: "./assets/images/icon.png", scheme,
-  extra: { apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? "" },
+  extra: {
+    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? "",
+    eas: { projectId: "b98d1fb2-1abd-4d36-b12d-824fd8452afe" },
+  },
   ios: { supportsTablet: true, bundleIdentifier: bundleId, infoPlist: { ITSAppUsesNonExemptEncryption: false } },
   android: { adaptiveIcon: { backgroundColor: "#07111f", foregroundImage: "./assets/images/android-icon-foreground.png", backgroundImage: "./assets/images/android-icon-background.png", monochromeImage: "./assets/images/android-icon-monochrome.png" }, predictiveBackGestureEnabled: false, package: bundleId, permissions: [] },
   web: { bundler: "metro", output: "static", favicon: "./assets/images/favicon.png" },
