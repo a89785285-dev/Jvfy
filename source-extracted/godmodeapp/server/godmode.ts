@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { invokeLLM } from "./_core/llm";
+import { ENV } from "./_core/env";
 import { publicProcedure, router } from "./_core/trpc";
 
 const inputSchema = z.object({
@@ -29,6 +30,7 @@ function taskFor(mode: z.infer<typeof inputSchema>["mode"], prompt: string, resp
 }
 
 export const godmodeRouter = router({
+  status: publicProcedure.query(() => ({ configured: Boolean(ENV.forgeApiKey), endpoint: ENV.forgeApiUrl ? "custom" : "default" })),
   run: publicProcedure.input(inputSchema).mutation(async ({ input }) => {
     if (input.mode === "evaluate" && !input.response?.trim()) {
       throw new TRPCError({ code: "BAD_REQUEST", message: "A response is required for evaluation." });
