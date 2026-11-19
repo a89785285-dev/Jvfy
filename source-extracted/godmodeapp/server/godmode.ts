@@ -30,7 +30,7 @@ function taskFor(mode: z.infer<typeof inputSchema>["mode"], prompt: string, resp
 }
 
 export const godmodeRouter = router({
-  status: publicProcedure.query(() => ({ configured: Boolean(ENV.aiApiKey), endpoint: "server-configured", model: ENV.aiModel })),
+  status: publicProcedure.query(() => ({ configured: Boolean(ENV.aiApiKey.trim() && ENV.aiModel.trim()), endpoint: "server-configured", model: ENV.aiModel })),
   run: publicProcedure.input(inputSchema).mutation(async ({ input }) => {
     if (input.mode === "evaluate" && !input.response?.trim()) {
       throw new TRPCError({ code: "BAD_REQUEST", message: "A response is required for evaluation." });
