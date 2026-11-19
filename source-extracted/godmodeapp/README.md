@@ -1,6 +1,6 @@
 # GODMODE Mobile
 
-تطبيق Android مبني على Expo/React Native يعيد تنفيذ وظائف GODMODE الأساسية على الهاتف. التطبيق يعمل محليًا افتراضيًا: يحلل prompts بإشارات pattern وheuristic، يقيّم responses بسبعة أبعاد، يحفظ dataset cases، ويشارك JSONL عبر نظام مشاركة Android. النصوص المدخلة تعامل كبيانات غير موثوقة ولا يتم تنفيذها.
+تطبيق Android مبني على Expo/React Native. تعمل أدوات Prompt Analyzer وResponse Evaluator وDataset محليًا، بينما يستخدم Prompt Studio خادم Node.js مستقلًا للاتصال بمزوّد ذكاء اصطناعي متوافق مع OpenAI. مفتاح المزوّد محفوظ على الخادم فقط ولا يوضع داخل APK. النصوص المدخلة تعامل كبيانات غير موثوقة ولا يتم تنفيذها.
 
 ## التشغيل أثناء التطوير
 
@@ -11,7 +11,7 @@ pnpm test
 pnpm dev
 ```
 
-يستخدم المشروع منفذي Expo 8081 وAPI 3000 وفق قالب Mobile. الوظائف الأساسية لا تعتمد على API خارجي، وتخزينها عبر AsyncStorage. Semantic detection وOllama غير مفعّلين افتراضيًا.
+تستخدم الوظائف المحلية AsyncStorage. يحتاج Prompt Studio إلى نشر API أولاً وضبط `AI_API_KEY` و`AI_API_BASE_URL` و`AI_MODEL` على الخادم. راجع [دليل نشر خادم AI](./docs/AI_BACKEND_DEPLOYMENT.md). لا تضع أي مفتاح API في متغيرات `EXPO_PUBLIC_*` أو في إعدادات بناء APK.
 
 ## إنتاج APK
 
