@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { invokeLLM } from "./_core/llm";
 import { ENV } from "./_core/env";
+import { publicProcedure, router } from "./_core/trpc";
 
 const inputSchema = z.object({
   mode: z.enum(["generate", "analyze", "evaluate", "optimize"]),
