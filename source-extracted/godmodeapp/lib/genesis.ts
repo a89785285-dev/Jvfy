@@ -33,6 +33,8 @@ export type GenesisPlan = {
   projectType: GenesisProjectType;
   createdAt: string;
   architecture: string[];
+  modules: string[];
+  technicalConsiderations: string[];
   agents: GenesisAgent[];
   phases: GenesisPhase[];
   tasks: GenesisTask[];
@@ -59,6 +61,52 @@ function classifyProject(brief: string): GenesisProjectType {
   if (contains(text, ["موقع", "website", "web app", "ويب", "متجر إلكتروني"])) return "web";
   if (contains(text, ["تطبيق", "app", "mobile", "android", "ios", "هاتف"])) return "mobile";
   return "general";
+}
+
+function detectProjectModules(type: GenesisProjectType, brief: string): string[] {
+  const text = brief.toLowerCase();
+  const modules: string[] = [];
+  const add = (label: string, keywords: string[]) => {
+    if (contains(text, keywords)) modules.push(label);
+  };
+
+  if (type === "mobile") modules.push("تطبيق الهاتف والتنقل", "التخزين المحلي وإدارة حالة التطبيق");
+  if (type === "web") modules.push("واجهة ويب متجاوبة", "إدارة الجلسات وواجهات API");
+  if (type === "ai") modules.push("منسّق الوكلاء والمهام", "موصلات مزودي النماذج", "تقييم مخرجات الذكاء الاصطناعي");
+  if (type === "game") modules.push("حلقة اللعب والتحكم", "إدارة المشاهد والأصول", "الحفظ والتقدم داخل اللعبة");
+
+  add("تسجيل الدخول وإدارة الحسابات", ["تسجيل الدخول", "حساب", "مصادقة", "login", "authentication", "auth"]);
+  add("المحادثات والرسائل الفورية", ["مراسلة", "محادث", "رسائل", "chat", "messaging", "real-time", "realtime"]);
+  add("مشاركة الملفات والوسائط", ["ملفات", "صور", "فيديو", "مرفقات", "upload", "file sharing", "media"]);
+  add("الإشعارات والتنبيهات", ["إشعارات", "تنبيهات", "notifications", "push"]);
+  add("الدفع والاشتراكات", ["دفع", "مدفوعات", "اشتراك", "شراء", "payment", "subscription", "checkout"]);
+  add("البحث والفهرسة", ["بحث", "محرك بحث", "search", "indexing"]);
+  add("المزامنة والعمل دون اتصال", ["دون إنترنت", "بدون إنترنت", "ضعف الإنترنت", "offline", "sync", "synchronization"]);
+  add("لوحة الإدارة والصلاحيات", ["لوحة إدارة", "مدير", "صلاحيات", "roles", "admin"]);
+  add("التحليلات والتقارير", ["تحليلات", "إحصائيات", "تقارير", "analytics", "reports"]);
+  add("الأمان وحماية البيانات", ["تشفير", "خصوصية", "أمان", "security", "encryption", "privacy"]);
+
+  return [...new Set(modules)];
+}
+
+function technicalConsiderationsFor(type: GenesisProjectType, brief: string): string[] {
+  const text = brief.toLowerCase();
+  const notes = type === "mobile"
+    ? ["اختبار اختلاف أحجام الشاشات وإصدارات Android", "التعامل مع أذونات الجهاز وحالات انقطاع الشبكة"]
+    : type === "web"
+      ? ["حماية الجلسات وواجهات API", "اختبار المتصفحات والتصميم المتجاوب"]
+      : type === "ai"
+        ? ["عزل مفاتيح المزودين على الخادم وعدم تضمينها في التطبيق", "قياس جودة المخرجات والتكلفة وزمن الاستجابة"]
+        : type === "game"
+          ? ["قياس معدل الإطارات واستهلاك الذاكرة على الأجهزة المستهدفة", "اختبار الحفظ والاستعادة وتوازن الأداء"]
+          : ["تحديد حدود النظام والاعتماديات قبل اختيار التقنيات"];
+
+  if (contains(text, ["تشفير", "encryption", "خصوصية", "privacy"])) notes.push("تحديد نموذج التهديد وإدارة المفاتيح وعدم الادعاء بتشفير طرفي دون تصميمه واختباره");
+  if (contains(text, ["مراسلة", "محادث", "رسائل", "chat", "real-time", "realtime"])) notes.push("تصميم ترتيب الرسائل وإعادة المحاولة ومنع التكرار عند ضعف الاتصال");
+  if (contains(text, ["ملفات", "صور", "فيديو", "upload", "file sharing"])) notes.push("التحقق من نوع الملفات وحجمها وصلاحيات الوصول وسياسة الاحتفاظ");
+  if (contains(text, ["دون إنترنت", "بدون إنترنت", "offline", "sync"])) notes.push("حل تعارضات المزامنة وتحديد مصدر الحقيقة عند عودة الاتصال");
+  if (contains(text, ["دفع", "مدفوعات", "اشتراك", "payment", "subscription"])) notes.push("عدم تخزين بيانات البطاقات الحساسة والتحقق من إشعارات الدفع على الخادم");
+  return [...new Set(notes)];
 }
 
 function architectureFor(type: GenesisProjectType): string[] {
@@ -126,11 +174,17 @@ export function generateGenesisPlan(rawBrief: string, now = new Date()): Genesis
     taskIds: tasks.filter((task) => task.phase === phase.phase).map((task) => task.id),
   }));
 
+  const modules = detectProjectModules(projectType, brief);
+  const technicalConsiderations = technicalConsiderationsFor(projectType, brief);
+  const text = brief.toLowerCase();
   const risks = [
     "اتساع نطاق الفكرة قبل إثبات قيمة الإصدار الأول؛ نعالج ذلك بتحديد MVP واضح.",
     "الاعتماد على خدمات خارجية أو مفاتيح API؛ يجب حفظ الأسرار على الخادم وعدم تضمينها في التطبيق.",
     "تراكم المهام دون اختبارات؛ لا تنتقل المرحلة قبل التحقق من مخرجاتها.",
     ...(projectType === "ai" ? ["قد تنتج النماذج إجابات غير دقيقة؛ نحتاج تقييم النتائج ومراجعة بشرية للقرارات المهمة."] : []),
+    ...(contains(text, ["تشفير", "encryption", "خصوصية", "privacy"]) ? ["التشفير غير المصمم جيداً قد يعطي إحساساً زائفاً بالأمان؛ يلزم نموذج تهديد ومراجعة مستقلة."] : []),
+    ...(contains(text, ["مراسلة", "محادث", "رسائل", "chat", "real-time", "realtime"]) ? ["قد تتكرر الرسائل أو يختل ترتيبها عند انقطاع الاتصال؛ يلزم اختبار إعادة المحاولة والمزامنة."] : []),
+    ...(contains(text, ["دفع", "مدفوعات", "اشتراك", "payment", "subscription"]) ? ["أخطاء تأكيد الدفع أو تكرار الطلب قد تسبب معاملات غير صحيحة؛ يلزم تحقق خادمي ومعرّفات idempotency."] : []),
   ];
 
   const acceptanceCriteria = [
@@ -148,6 +202,8 @@ export function generateGenesisPlan(rawBrief: string, now = new Date()): Genesis
     projectType,
     createdAt: now.toISOString(),
     architecture: architectureFor(projectType),
+    modules,
+    technicalConsiderations,
     agents: GENESIS_AGENTS,
     phases,
     tasks,
