@@ -16,6 +16,24 @@ describe("GODMODE GENESIS planner", () => {
     expect(plan.architecture).toContain("منسّق المهام والوكلاء (Orchestrator)");
   });
 
+  it("tailors modules and engineering risks to the requested product", () => {
+    const plan = generateGenesisPlan("أريد تطبيق مراسلة فورية يدعم المحادثات الخاصة والمجموعات ومشاركة الصور وتشفير المحادثات والإشعارات والعمل دون إنترنت");
+    expect(plan.projectType).toBe("mobile");
+    expect(plan.modules).toContain("المحادثات والرسائل الفورية");
+    expect(plan.modules).toContain("مشاركة الملفات والوسائط");
+    expect(plan.modules).toContain("الإشعارات والتنبيهات");
+    expect(plan.modules).toContain("الأمان وحماية البيانات");
+    expect(plan.technicalConsiderations.some((item) => item.includes("نموذج التهديد"))).toBe(true);
+    expect(plan.risks.some((item) => item.includes("ترتيبها"))).toBe(true);
+  });
+
+  it("does not add unrelated modules to a simple game idea", () => {
+    const plan = generateGenesisPlan("Build a small offline puzzle game for Android");
+    expect(plan.projectType).toBe("game");
+    expect(plan.modules).toContain("حلقة اللعب والتحكم");
+    expect(plan.modules).not.toContain("الدفع والاشتراكات");
+  });
+
   it("rejects an empty or very short idea", () => {
     expect(() => generateGenesisPlan("app")).toThrow();
   });
