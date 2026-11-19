@@ -1,0 +1,37 @@
+name: Build GODMODE Android APK
+
+on:
+  push:
+    branches:
+      - prompt-forge/inspect-source
+    paths:
+      - "source-extracted/godmodeapp/app.config.ts"
+      - "source-extracted/godmodeapp/eas.json"
+      - ".github/workflows/build-godmode-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: source-extracted/godmodeapp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install EAS CLI
+        run: npm install --global eas-cli
+
+      - name: Start Android APK build on Expo
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build --platform android --profile preview --non-interactive
