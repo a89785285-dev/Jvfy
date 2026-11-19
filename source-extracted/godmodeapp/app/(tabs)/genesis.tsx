@@ -97,6 +97,21 @@ export default function GenesisScreen() {
             </View>)}
           </Card>
 
+          <Card title="Project modules" icon="apps-outline">
+            <Text style={{ color: C.muted, fontSize: 12, lineHeight: 18, marginBottom: 10 }}>مكونات مستنتجة من متطلبات فكرتك، وليست قائمة ثابتة لكل المشاريع.</Text>
+            {plan.modules.map((module) => <View key={module} style={{ flexDirection: "row", alignItems: "center", gap: 9, paddingVertical: 7, borderTopWidth: 1, borderTopColor: C.border }}>
+              <Ionicons name="cube-outline" size={16} color={C.cyan} />
+              <Text style={{ color: C.text, flex: 1, fontSize: 12 }}>{module}</Text>
+            </View>)}
+          </Card>
+
+          <Card title="Engineering considerations" icon="construct-outline">
+            {plan.technicalConsiderations.map((item) => <View key={item} style={{ flexDirection: "row", gap: 9, marginBottom: 9 }}>
+              <Ionicons name="shield-checkmark-outline" size={17} color={C.amber} />
+              <Text style={{ color: C.text, fontSize: 12, lineHeight: 19, flex: 1 }}>{item}</Text>
+            </View>)}
+          </Card>
+
           <Card title="Execution roadmap" icon="map-outline" right={<Tag label="6 PHASES" />}>
             {plan.phases.map((phase) => {
               const tasks = plan.tasks.filter((task) => task.phase === phase.id);
