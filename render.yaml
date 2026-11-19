@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: godmode-ai-api
+    runtime: node
+    rootDir: source-extracted/godmodeapp
+    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    startCommand: pnpm start:server
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AI_API_BASE_URL
+        value: https://api.openai.com
+      - key: AI_MODEL
+        value: gpt-4o-mini
+      - key: AI_API_KEY
+        sync: false
