@@ -13,9 +13,16 @@ pnpm dev
 
 تستخدم الوظائف المحلية AsyncStorage. يحتاج Prompt Studio إلى نشر API أولاً وضبط `AI_API_KEY` و`AI_API_BASE_URL` و`AI_MODEL` على الخادم. راجع [دليل نشر خادم AI على Vercel](./docs/VERCEL_DEPLOYMENT.md). لا تضع أي مفتاح API في متغيرات `EXPO_PUBLIC_*` أو في إعدادات بناء APK.
 
-## إنتاج APK
+## إنتاج APK عبر GitHub Actions
 
-ملف `eas.json` يحتوي profile باسم `preview` مضبوطًا على Android APK. استخدم زر **Build Android** في Dashboard لمشروع GODMODE Mobile واختر profile `preview`. بيئة Sandbox لا تنفذ Android release build، لذلك لا يُعتبر APK موجودًا قبل نجاح البناء الفعلي وظهور artifact قابل للتنزيل. التفاصيل في [APK_BUILD.md](./APK_BUILD.md).
+يُبنى APK مباشرةً على GitHub Actions دون استخدام EAS Build أو `EXPO_TOKEN`:
+
+1. افتح تبويب **Actions** في مستودع GitHub.
+2. اختر **Build GODMODE Android APK**.
+3. اضغط **Run workflow** على الفرع `prompt-forge/inspect-source`.
+4. بعد نجاح التشغيل، افتح التشغيل نفسه ونزّل artifact باسم `GODMODE-Mobile-Android-APK`.
+
+يعمل الـ workflow على توليد مشروع Android بواسطة Expo Prebuild ثم تشغيل Gradle لإنتاج APK. يُوقّع APK الناتج بمفتاح debug الافتراضي، وهو مناسب للتثبيت والاختبار وليس إصدارًا إنتاجيًا للنشر على Google Play. يحتفظ GitHub بالـ artifact لمدة 14 يومًا.
 
 ## الشاشات
 
