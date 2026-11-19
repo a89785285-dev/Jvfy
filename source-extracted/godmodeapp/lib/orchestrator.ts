@@ -25,7 +25,7 @@ export type OrchestrationRun = {
   events: Array<{ id: string; at: string; type: string; message: string }>;
 };
 
-const approvalPattern = /\b(deploy|publish|release|delete|remove|overwrite|charge|purchase|send email|send message)\b|نشر|حذف|مسح|استبدال|شراء|دفع|إرسال رسالة|إرسال بريد/i;
+const approvalPattern = /\b(deploy|publish|release|delete|remove|overwrite|charge|purchase|send email|send message)\b|نشر|إطلاق|حذف|مسح|استبدال|شراء|دفع|إرسال رسالة|إرسال بريد/i;
 
 export function createOrchestrationRun(plan: GenesisPlan, now = new Date()): OrchestrationRun {
   const tasks: OrchestratedTask[] = plan.tasks.map((task: GenesisTask, index: number) => {
