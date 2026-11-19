@@ -12,6 +12,6 @@ services:
       - key: AI_API_BASE_URL
         value: https://api.openai.com
       - key: AI_MODEL
-        value: gpt-4o-mini
+        value: gpt-6-luna
       - key: AI_API_KEY
         sync: false
