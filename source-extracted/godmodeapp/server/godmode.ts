@@ -2,7 +2,6 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { invokeLLM } from "./_core/llm";
 import { ENV } from "./_core/env";
-import { publicProcedure, router } from "./_core/trpc";
 
 const inputSchema = z.object({
   mode: z.enum(["generate", "analyze", "evaluate", "optimize"]),
@@ -44,11 +43,8 @@ export const godmodeRouter = router({
         maxTokens: 1600,
       });
       const content = result.choices?.[0]?.message?.content;
-      const output = typeof content === "string"
-        ? content.trim()
-        : Array.isArray(content)
-          ? content.filter((part) => part.type === "text").map((part) => part.text).join("\\n").trim()
-          : "";
+      // invokeLLM's contract guarantees string content; array handling was an impossible branch.
+      const output = typeof content === "string" ? content.trim() : "";
       if (!output) throw new Error("The model returned an empty response.");
       return { output, model: result.model ?? "configured-model", mode: input.mode };
     } catch (error) {
