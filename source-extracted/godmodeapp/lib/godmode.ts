@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { detectSemanticSignals } from "./semantic-detection";
 
 export type Severity = "low" | "medium" | "high" | "critical";
 export type Detection = { ruleId: string; layer: "pattern" | "heuristic"; category: string; severity: Severity; confidence: number; evidence: string; explanation: string };
@@ -35,6 +36,7 @@ export function analyzePrompt(input: string): AnalysisResult {
     const match = text.match(pattern);
     if (match) signals.push({ ruleId, layer: "pattern", category, severity, confidence, evidence: match[0].slice(0, 150), explanation });
   }
+  signals.push(...detectSemanticSignals(input));
   const lower = text.toLowerCase();
   const heuristics: Array<[string, string, string[], Severity, number]> = [
     ["H001", "previous_instruction_override", ["previous message", "earlier instruction", "disregard context"], "medium", 0.68],
