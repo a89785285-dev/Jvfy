@@ -1,4 +1,5 @@
 name: Build GODMODE Android APK
+# CI includes a Maven Central mirror fallback for resilient dependency downloads.
 
 on:
   push:
