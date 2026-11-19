@@ -1,0 +1,139 @@
+name: Build GODMODE Android APK
+# CI includes a Maven Central mirror fallback for resilient dependency downloads.
+
+on:
+  push:
+    branches:
+      - prompt-forge/inspect-source
+    paths:
+      - "source-extracted/godmodeapp/**"
+      - ".github/workflows/build-godmode-apk.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: godmode-apk-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    name: Generate and build Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: source-extracted/godmodeapp
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: source-extracted/godmodeapp/pnpm-lock.yaml
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Android command-line tools
+        run: |
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/android-sdk}}"
+          TOOLS_DIR="$RUNNER_TEMP/android-command-line-tools"
+          mkdir -p "$TOOLS_DIR" "$SDK_ROOT/cmdline-tools"
+          curl -fsSL "https://dl.google.com/android/repository/commandlinetools-linux-12266719_latest.zip" -o "$RUNNER_TEMP/android-command-line-tools.zip"
+          unzip -q "$RUNNER_TEMP/android-command-line-tools.zip" -d "$TOOLS_DIR"
+          rm -rf "$SDK_ROOT/cmdline-tools/latest"
+          mv "$TOOLS_DIR/cmdline-tools" "$SDK_ROOT/cmdline-tools/latest"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "$SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
+          "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --version
+
+      - name: Accept Android SDK licenses and install build packages
+        run: |
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate native Android project
+        run: pnpm exec expo prebuild --platform android --no-install --clean
+
+      - name: Configure Maven Central mirror fallback
+        run: |
+          cat > "$RUNNER_TEMP/maven-central-mirror.init.gradle" <<'GRADLE'
+          // Add Google's Maven Central mirror to every project build, including
+          // the included React Native Gradle plugin build. Keep original repos
+          // as fallbacks for artifacts not yet synchronized to the mirror.
+          gradle.beforeProject { project ->
+            project.buildscript.repositories.maven {
+              name = "googleMavenCentralMirror"
+              url = uri("https://maven-central.storage-download.googleapis.com/maven2/")
+            }
+            project.repositories.maven {
+              name = "googleMavenCentralMirror"
+              url = uri("https://maven-central.storage-download.googleapis.com/maven2/")
+            }
+          }
+          GRADLE
+          echo "Configured Google-hosted Maven Central mirror fallback."
+
+      - name: Build installable release APK
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew --init-script "$RUNNER_TEMP/maven-central-mirror.init.gradle" --no-daemon --stacktrace assembleRelease
+
+      - name: Sign release APK for direct installation
+        run: |
+          APK="android/app/build/outputs/apk/release/app-release.apk"
+          SIGNED_APK="$RUNNER_TEMP/app-release-signed.apk"
+          KEYSTORE="$RUNNER_TEMP/godmode-debug.keystore"
+          keytool -genkeypair -v \
+            -keystore "$KEYSTORE" \
+            -storepass android \
+            -keypass android \
+            -alias androiddebugkey \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign \
+            --ks "$KEYSTORE" \
+            --ks-key-alias androiddebugkey \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --out "$SIGNED_APK" \
+            "$APK"
+          mv "$SIGNED_APK" "$APK"
+
+      - name: Verify signed APK output
+        run: |
+          APK="android/app/build/outputs/apk/release/app-release.apk"
+          test -s "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$APK"
+          ls -lh "$APK"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GODMODE-Mobile-Android-APK
+          path: source-extracted/godmodeapp/android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 14

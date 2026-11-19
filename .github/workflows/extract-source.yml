@@ -1,0 +1,57 @@
+name: Extract app source for inspection
+
+on:
+  push:
+    branches:
+      - prompt-forge/inspect-source
+    paths:
+      - ".github/workflows/extract-source.yml"
+      - "GODMODE-Mobile-Android-source (1).zip"
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout inspection branch
+        uses: actions/checkout@v4
+        with:
+          ref: prompt-forge/inspect-source
+
+      - name: Extract project archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="GODMODE-Mobile-Android-source (1).zip"
+          test -f "$archive"
+          rm -rf source-extracted
+          mkdir -p source-extracted
+          unzip -q "$archive" -d source-extracted
+          find source-extracted -type d -name .git -prune -exec rm -rf {} +
+          while IFS= read -r -d '' file; do
+            case "$file" in
+              */.env|*/.env.*|*.keystore|*.jks|*.p12|*.pem|*/credentials.json)
+                rm -f "$file"
+                ;;
+            esac
+          done < <(find source-extracted -type f -print0)
+          echo "Extracted file count:"
+          find source-extracted -type f | wc -l
+          echo "Top-level extracted entries:"
+          find source-extracted -mindepth 1 -maxdepth 2 -print | head -80
+
+      - name: Commit extracted source to inspection branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add source-extracted
+          if git diff --cached --quiet; then
+            echo "No extracted files to commit."
+            exit 0
+          fi
+          git commit -m "Extract app source for inspection [skip ci]"
+          git push origin HEAD:prompt-forge/inspect-source
